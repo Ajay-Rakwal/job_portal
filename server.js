@@ -309,7 +309,7 @@ app.put('/api/auth/profile', authenticateToken, async (req, res) => {
     if (skills !== undefined) updateData.skills = skills;
     if (companyName !== undefined) updateData.companyName = companyName;
 
-    const updatedUser = await User.findOneAndUpdate({ id: req.user.id }, updateData, { new: true });
+    const updatedUser = await User.findOneAndUpdate({ id: req.user.id }, updateData, { returnDocument: 'after' });
     res.json({ user: formatUser(updatedUser), message: 'Profile updated successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to update profile' });
@@ -469,9 +469,9 @@ app.patch('/api/applications/:id/status', authenticateToken, async (req, res) =>
     if (!status) return res.status(400).json({ error: 'Status is required' });
 
     const updated = await Application.findOneAndUpdate(
-      { id: req.params.id }, 
-      { status }, 
-      { new: true }
+      { id: req.params.id },
+      { status },
+      { returnDocument: 'after' }
     );
     if (!updated) return res.status(404).json({ error: 'Application not found' });
 

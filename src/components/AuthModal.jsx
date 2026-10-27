@@ -1,6 +1,6 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { User, Briefcase, Lock, Mail, Building, CheckCircle2 } from 'lucide-react';
+import { User, Briefcase, Lock, Mail, Building } from 'lucide-react';
 
 export const AuthModal = ({ isOpen, onClose, initialMode = 'login', onShowNotification }) => {
   const { login, register, loginAsDemoCandidate, loginAsDemoEmployer } = useContext(AuthContext);
@@ -13,18 +13,29 @@ export const AuthModal = ({ isOpen, onClose, initialMode = 'login', onShowNotifi
   const [name, setName] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Sync mode when modal opens with a different initialMode (e.g. clicking "Register" vs "Log In")
+  useEffect(() => {
+    if (isOpen) {
+      setMode(initialMode);
+      setError('');
+    }
+  }, [isOpen, initialMode]);
 
   if (!isOpen) return null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    if (isSubmitting) return;
 
     if (!email || !password) {
       setError('Please fill in all required fields.');
       return;
     }
 
+    setIsSubmitting(true);
     try {
       if (mode === 'login') {
         await login(email, password);
@@ -46,31 +57,39 @@ export const AuthModal = ({ isOpen, onClose, initialMode = 'login', onShowNotifi
           role,
           companyName
         });
-        onShowNotification(`Account created successfully! Welcome.`);
+        onShowNotification(`Account created successfully! Welcome, ${name}!`);
         onClose();
       }
     } catch (err) {
-      setError(err.message || 'Authentication failed');
+      setError(err.message || 'Authentication failed. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleDemoCandidate = async () => {
+    setIsSubmitting(true);
     try {
       await loginAsDemoCandidate();
       onShowNotification('Signed in as Demo Candidate (Alex Johnson)');
       onClose();
     } catch (err) {
-      setError(err.message || 'Demo login failed');
+      setError(err.message || 'Demo login failed. Is the backend running?');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleDemoEmployer = async () => {
+    setIsSubmitting(true);
     try {
       await loginAsDemoEmployer();
       onShowNotification('Signed in as Demo Employer (TechPulse Solutions)');
       onClose();
     } catch (err) {
-      setError(err.message || 'Demo login failed');
+      setError(err.message || 'Demo login failed. Is the backend running?');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -198,8 +217,21 @@ export const AuthModal = ({ isOpen, onClose, initialMode = 'login', onShowNotifi
                 </div>
               </div>
 
-              <button type="submit" className="btn btn-primary-custom w-100 py-2 fs-6 shadow-sm mb-3">
-                {mode === 'login' ? `Sign In as ${role === 'candidate' ? 'Job Seeker' : 'Employer'}` : `Register as ${role === 'candidate' ? 'Job Seeker' : 'Employer'}`}
+              <button
+                type="submit"
+                className="btn btn-primary-custom w-100 py-2 fs-6 shadow-sm mb-3 d-flex align-items-center justify-content-center gap-2"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    {mode === 'login' ? 'Signing in...' : 'Creating account...'}
+                  </>
+                ) : (
+                  mode === 'login'
+                    ? `Sign In as ${role === 'candidate' ? 'Job Seeker' : 'Employer'}`
+                    : `Register as ${role === 'candidate' ? 'Job Seeker' : 'Employer'}`
+                )}
               </button>
             </form>
 

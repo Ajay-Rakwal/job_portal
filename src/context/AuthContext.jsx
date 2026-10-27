@@ -53,6 +53,8 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('job_portal_token', data.token);
       localStorage.setItem('job_portal_user', JSON.stringify(data.user));
       return data.user;
+    } catch (err) {
+      throw err; // re-throw so callers (AuthModal) can catch and display the error
     } finally {
       setLoading(false);
     }
@@ -76,6 +78,8 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('job_portal_token', data.token);
       localStorage.setItem('job_portal_user', JSON.stringify(data.user));
       return data.user;
+    } catch (err) {
+      throw err; // re-throw so callers (AuthModal) can catch and display the error
     } finally {
       setLoading(false);
     }
